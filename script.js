@@ -230,91 +230,25 @@ document.addEventListener('DOMContentLoaded', () => {
         fileList.innerHTML = '';
         fileContent.style.display = 'none';
         
-        // Try different API methods for listing directory contents
-        if (typeof window.Akitaki.listDirectory === 'function') {
-            log('Using listDirectory API method');
+        // Use the correct operation supported by Akitaki
+        if (typeof window.Akitaki.processFile === 'function') {
+            log('Using processFile API method with listFolder operation');
             
-            window.Akitaki.listDirectory(folderPath)
-                .then(contents => handleContents(contents))
-                .catch(handleListingError);
-        }
-        else if (typeof window.Akitaki.readDirectory === 'function') {
-            log('Using readDirectory API method');
-            
-            window.Akitaki.readDirectory(folderPath)
-                .then(contents => handleContents(contents))
-                .catch(handleListingError);
-        }
-        else {
-            log('Using processFile API method with listContents operation');
-            
-            // Try different operation names that the API might support
-            const tryNextOperation = (operations, index = 0) => {
-                if (index >= operations.length) {
-                    showError(`Could not list folder contents. None of the known API operations are supported.`);
-                    return;
-                }
-                
-                const operation = operations[index];
-                log(`Trying operation: ${operation}`);
-                
-                window.Akitaki.processFile({
-                    path: folderPath,
-                    operation: operation
-                })
-                .then(contents => {
-                    log(`Success with operation: ${operation}`);
-                    handleContents(contents);
-                })
-                .catch(error => {
-                    log(`Failed with operation: ${operation}, error: ${error.message}`);
-                    // Try the next operation
-                    tryNextOperation(operations, index + 1);
-                });
-            };
-            
-            // Try these operations in order
-            tryNextOperation(['listContents', 'list', 'readDir', 'getFiles', 'getDirectoryContents']);
+            window.Akitaki.processFile({
+                path: folderPath,
+                operation: 'listFolder'
+            })
+            .then(contents => handleContents(contents))
+            .catch(handleListingError);
+        } else {
+            showError('Akitaki API does not support folder listing.');
         }
         
         function handleContents(contents) {
             log(`Folder contents received: ${contents ? (Array.isArray(contents) ? contents.length : 'not an array') : 'null'}`);
             
-            // Handle different response formats
             if (Array.isArray(contents)) {
                 displayFolderContents(contents);
-            } 
-            else if (contents && typeof contents === 'object') {
-                // Some APIs might return objects with files/folders properties
-                const files = [];
-                
-                // Try to extract files from different possible structures
-                if (Array.isArray(contents.files)) {
-                    contents.files.forEach(file => {
-                        files.push({
-                            name: typeof file === 'string' ? file : file.name,
-                            isDirectory: false,
-                            ...file
-                        });
-                    });
-                }
-                
-                if (Array.isArray(contents.folders)) {
-                    contents.folders.forEach(folder => {
-                        files.push({
-                            name: typeof folder === 'string' ? folder : folder.name,
-                            isDirectory: true,
-                            ...folder
-                        });
-                    });
-                }
-                
-                // If we extracted files, display them
-                if (files.length > 0) {
-                    displayFolderContents(files);
-                } else {
-                    showError('Invalid folder contents format returned');
-                }
             } else {
                 showError('Invalid folder contents returned');
             }
