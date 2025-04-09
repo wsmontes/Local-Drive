@@ -54,6 +54,13 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+        .help-button {
+            background-color: #0066cc;
+            margin-left: 10px;
+        }
+        .help-button:hover {
+            background-color: #0055aa;
+        }
         .file-browser {
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -116,6 +123,35 @@
             border-radius: 4px;
             display: none;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover {
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -130,6 +166,7 @@
             <button id="connectBtn" disabled>Connect to Akitaki</button>
             <button id="selectFolderBtn" disabled>Select Folder</button>
             <button id="goBackBtn" disabled>Back</button>
+            <button id="helpBtn" class="help-button">Help</button>
         </div>
         
         <div id="fileBrowser" class="file-browser">
@@ -149,6 +186,36 @@
                 <li>Reload this page after installation</li>
             </ol>
             <p><a href="usage-guide.md" target="_blank">View the full usage guide</a></p>
+        </div>
+    </div>
+    
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeModal">&times;</span>
+            <h2>Akitaki File Navigator - Help</h2>
+            <h3>Getting Started</h3>
+            <ol>
+                <li>Make sure the Akitaki extension is installed in your browser</li>
+                <li>Click "Connect" to grant permission to access your file system</li>
+                <li>Click "Select Folder" to choose a folder to navigate</li>
+            </ol>
+            
+            <h3>Navigating Files and Folders</h3>
+            <ul>
+                <li>Click on a folder to open it</li>
+                <li>Click on a file to view its contents</li>
+                <li>Use the breadcrumb navigation to go back to parent folders</li>
+                <li>Click "Back" to return to the previous location</li>
+            </ul>
+            
+            <h3>Troubleshooting</h3>
+            <p><strong>No folder dialog appears:</strong> Click the Akitaki extension icon in your browser toolbar first, then try selecting a folder.</p>
+            <p><strong>Permission errors:</strong> Try reconnecting by clicking the "Connect" button again.</p>
+            <p><strong>File content not loading:</strong> Some file types may not display properly. Try with text files first.</p>
+            
+            <h3>About Akitaki</h3>
+            <p>Akitaki is a browser extension that allows websites to safely access your local file system with your explicit permission.</p>
+            <p>This navigator never accesses your files without your consent and only has access to folders you specifically select.</p>
         </div>
     </div>
 

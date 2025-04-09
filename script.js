@@ -230,16 +230,107 @@ document.addEventListener('DOMContentLoaded', () => {
         fileList.innerHTML = '';
         fileContent.style.display = 'none';
         
-        // Use the 'listFolder' operation which is explicitly mentioned in the error as supported
+        // Use the 'listContents' operation which seems to work but returns a non-array format
         window.Akitaki.processFile({
             path: folderPath,
-            operation: 'listFolder'
+            operation: 'listContents'
         })
         .then(contents => {
-            log(`Folder contents received: ${contents ? (Array.isArray(contents) ? contents.length : 'not an array') : 'null'}`);
+            log(`Raw folder contents: ${JSON.stringify(contents)}`);
             
+            // Handle different response formats
             if (Array.isArray(contents)) {
+                log('Contents is an array, displaying directly');
                 displayFolderContents(contents);
+            } 
+            else if (contents && typeof contents === 'object') {
+                // Try to extract files from different possible structures
+                log('Contents is an object, trying to extract file/folder items');
+                const items = [];
+                
+                // If the response has 'files' or 'folders' properties
+                if (contents.files && Array.isArray(contents.files)) {
+                    log(`Found ${contents.files.length} files in the response`);
+                    contents.files.forEach(file => {
+                        if (typeof file === 'string') {
+                            items.push({
+                                name: file,
+                                isDirectory: false
+                            });
+                        } else if (file.name) {
+                            items.push({
+                                name: file.name,
+                                isDirectory: false,
+                                ...file
+                            });
+                        }
+                    });
+                }
+                
+                if (contents.folders && Array.isArray(contents.folders)) {
+                    log(`Found ${contents.folders.length} folders in the response`);
+                    contents.folders.forEach(folder => {
+                        if (typeof folder === 'string') {
+                            items.push({
+                                name: folder,
+                                isDirectory: true
+                            });
+                        } else if (folder.name) {
+                            items.push({
+                                name: folder.name,
+                                isDirectory: true,
+                                ...folder
+                            });
+                        }
+                    });
+                }
+                
+                // If we have entries directly in the object
+                if (contents.entries && Array.isArray(contents.entries)) {
+                    log(`Found ${contents.entries.length} entries in the response`);
+                    contents.entries.forEach(entry => {
+                        if (typeof entry === 'string') {
+                            // Try to guess if it's a directory by checking for trailing slash
+                            const isDir = entry.endsWith('/');
+                            items.push({
+                                name: isDir ? entry.slice(0, -1) : entry,
+                                isDirectory: isDir
+                            });
+                        } else if (entry.name) {
+                            items.push({
+                                name: entry.name,
+                                isDirectory: !!entry.isDirectory,
+                                ...entry
+                            });
+                        }
+                    });
+                }
+                
+                // If we found items to display
+                if (items.length > 0) {
+                    log(`Extracted ${items.length} items to display`);
+                    displayFolderContents(items);
+                } else {
+                    // Last resort: try to convert all object keys to files
+                    log('No items found in standard properties, trying to use object keys as filenames');
+                    const keys = Object.keys(contents).filter(key => 
+                        key !== 'success' && key !== 'error' && key !== 'path'
+                    );
+                    
+                    if (keys.length > 0) {
+                        const fileItems = keys.map(key => {
+                            // Try to determine if it's a directory based on the value
+                            const isDir = typeof contents[key] === 'object' && contents[key] !== null;
+                            return {
+                                name: key,
+                                isDirectory: isDir
+                            };
+                        });
+                        displayFolderContents(fileItems);
+                    } else {
+                        showError('Could not extract file or folder listings from the response');
+                    }
+                }
             } else {
                 showError('Invalid folder contents returned');
             }
@@ -398,4 +489,30 @@ document.addEventListener('DOMContentLoaded', () => {
         statusBar.classList.remove('connected');
         log(message, true);
     }
+
+    // Help button and modal functionality
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeModal = document.getElementById('closeModal');
+    
+    helpBtn.addEventListener('click', () => {
+        helpModal.style.display = 'block';
+    });
+    
+    closeModal.addEventListener('click', () => {
+        helpModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (event) => {
+        if (event.target === helpModal) {
+            helpModal.style.display = 'none';
+        }
+    });
+
+    // Add keyboard shortcut to close modal with Escape key
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && helpModal.style.display === 'block') {
+            helpModal.style.display = 'none';
+        }
+    });
 });
