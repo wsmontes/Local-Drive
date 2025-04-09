@@ -93,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
+            // First provide clear instructions to the user
+            statusBar.textContent = 'Please select a folder in the Akitaki extension popup that appears...';
+            statusBar.classList.remove('error');
+            
             // Check which method is available in the API
             if (typeof window.Akitaki.selectFolder === 'function') {
                 log('Using selectFolder API method');
@@ -104,9 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (typeof window.Akitaki.requestFolder === 'function') {
                 log('Using requestFolder API method');
                 
-                window.Akitaki.requestFolder()
-                    .then(handleFolderSelection)
-                    .catch(handleFolderError);
+                // Some versions of Akitaki might need explicit parameters
+                window.Akitaki.requestFolder({
+                    promptUser: true,  // Explicitly ask to show the folder picker
+                    rememberChoice: true // Remember the last selected folder
+                })
+                .then(handleFolderSelection)
+                .catch(handleFolderError);
             }
             else if (typeof window.Akitaki.openFolderPicker === 'function') {
                 log('Using openFolderPicker API method');
@@ -120,7 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 log('Using processFile as fallback for folder selection');
                 
                 window.Akitaki.processFile({
-                    operation: 'selectFolder'
+                    operation: 'selectFolder',
+                    showPicker: true
                 })
                 .then(handleFolderSelection)
                 .catch(handleFolderError);
@@ -169,10 +178,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Handle folder selection error
+    // Handle folder selection error with more detailed instructions
     function handleFolderError(error) {
         log(`Folder selection error: ${error.message || error}`, true);
-        showError(`Folder selection error: ${error.message || error}`);
+        
+        // Provide more helpful error message with instructions
+        if (error.message && error.message.includes("No folder selected")) {
+            showError('No folder selected. Please try again and select a folder in the Akitaki dialog. ' +
+                      'If no dialog appears, click the Akitaki extension icon in your browser toolbar first.');
+            
+            // Add a visual hint to help users understand what to do
+            const extensionHint = document.createElement('div');
+            extensionHint.innerHTML = '<div style="margin-top: 15px; padding: 10px; background-color: #ffffd6; border: 1px solid #e6e6b8; border-radius: 4px;">' +
+                '<p><strong>Tip:</strong> If you don\'t see a folder selection dialog, try the following:</p>' +
+                '<ol>' +
+                '<li>Click the Akitaki extension icon <img src="https://chrome.google.com/webstore/detail/akitaki/obpbcigciafdoohpgbgnpphaccbaeiij/icon" style="height: 16px; vertical-align: middle;"> in your browser toolbar</li>' +
+                '<li>In the extension popup, click "Select Folder" or "Choose Directory"</li>' +
+                '<li>Select a folder in your file system</li>' +
+                '<li>Return to this page and click "Select Folder" again</li>' +
+                '</ol>' +
+                '</div>';
+            
+            // Remove any existing hint before adding a new one
+            const existingHint = document.getElementById('extensionHint');
+            if (existingHint) {
+                existingHint.remove();
+            }
+            
+            extensionHint.id = 'extensionHint';
+            document.querySelector('.container').appendChild(extensionHint);
+        } else {
+            showError(`Folder selection error: ${error.message || error}`);
+        }
     }
 
     // Go back button handler
