@@ -142,6 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof folderInfo === 'string') {
             folderPath = folderInfo;
         } 
+        else if (folderInfo && folderInfo.folderInfo && folderInfo.folderInfo.path) {
+            folderPath = folderInfo.folderInfo.path;
+        }
         else if (folderInfo && folderInfo.path) {
             folderPath = folderInfo.path;
         }
@@ -162,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadFolderContents(currentPath);
         } else {
             showError('Invalid folder information returned from Akitaki');
+            log('Detailed folder info: ' + JSON.stringify(folderInfo));
         }
     }
 

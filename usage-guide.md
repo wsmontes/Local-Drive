@@ -1,153 +1,63 @@
-# Akitaki Extension - Usage Guide
+# Akitaki File Navigator - Usage Guide
 
 ## Overview
+This web-based file navigator uses the Akitaki browser extension to access and browse your local files securely. This guide explains how to set up and use the navigator.
 
-Akitaki is a Chrome extension that creates a secure bridge between websites and your local file system. It allows authorized websites to access and process files from a designated folder on your computer while maintaining security and privacy.
+## Installation Requirements
 
-## Key Features
+### 1. Install the Akitaki Extension
+The Akitaki Extension enables websites to access your local file system with your permission.
 
-- **Local Server**: Run a local server on your machine that can access designated folders
-- **Secure Access**: Only websites you authorize can access your local files
-- **Granular Permissions**: Control what each website can do with your files
-- **Privacy Control**: Your data remains on your computer - it's never uploaded to external servers
+1. Visit the [Chrome Web Store](https://chrome.google.com/webstore/detail/akitaki/obpbcigciafdoohpgbgnpphaccbaeiij) to install the Akitaki extension
+2. Click "Add to Chrome" to install the extension
+3. After installation, you should see the Akitaki icon in your browser's toolbar
 
-## Installation
+### 2. Configure Permissions
+When you first use the File Navigator:
 
-### Installing the Chrome Extension
+1. Click the "Connect" button in the application
+2. The browser will prompt you to allow the website to use Akitaki
+3. Click "Allow" to grant the necessary permissions
+4. The status bar will update to show you're connected
 
-1. Download the Akitaki extension from the Chrome Web Store (or load it as an unpacked extension for development)
-2. Click on the Akitaki icon in your Chrome toolbar to open the extension popup
-3. Follow the initial setup instructions
+## Using the File Navigator
 
-### Setting Up the Local Server
+### Selecting a Folder
+1. Click the "Select Folder" button
+2. A system folder picker will appear
+3. Browse to and select the folder you want to navigate
+4. Click "Select Folder" to confirm
 
-The local server component needs to be installed separately:
+### Navigating Files and Folders
+- Click on folders to navigate into them
+- Click on files to view their contents
+- Use the breadcrumb navigation at the top to go back to parent folders
+- Click the "Back" button to return to the previous location
 
-1. Download the Akitaki local server package from our website
-2. Extract the files to a location on your computer
-3. Open a terminal and navigate to the extracted folder
-4. Run `npm install` to install the required dependencies
-5. Run `node setup.js` to register the native messaging host with Chrome
-
-## Using Akitaki
-
-### Basic Workflow
-
-1. **Start the Local Server**: Click the "Start Server" button in the extension popup
-2. **Select a Folder**: Click "Select Folder" and choose which folder you want to make available
-3. **Visit Compatible Websites**: Websites that support Akitaki will request access
-4. **Authorize Access**: Grant or deny access when prompted
-5. **Use Website Features**: The website can now access your selected folder based on the permissions you granted
-
-### Understanding Permissions
-
-When a website requests access, it will ask for specific permissions:
-
-- **basic**: Can check if the extension is available (minimal access)
-- **folderAccess**: Can see information about your selected folder
-- **processFile**: Can read and process files from your selected folder
-- **writeFile**: Can create or modify files in your selected folder (if granted)
-
-You can always revoke permissions by clicking on a website in the "Authorized Websites" section of the extension popup and clicking "Revoke Access".
-
-## For Developers
-
-### Integrating with Akitaki in Your Website
-
-To use Akitaki in your website, include the following JavaScript:
-
-```javascript
-// Check if Akitaki is available
-document.addEventListener('akitaki-bridge-ready', () => {
-  console.log('Akitaki is available!');
-  
-  // Connect to Akitaki
-  window.Akitaki.connect(['folderAccess', 'processFile'])
-    .then(response => {
-      if (response.success) {
-        console.log('Connected to Akitaki:', response);
-        
-        // Request folder access
-        return window.Akitaki.requestFolder();
-      }
-    })
-    .then(folderInfo => {
-      console.log('Selected folder:', folderInfo);
-      
-      // Process files as needed
-      // Example: Process a specific file
-      return window.Akitaki.processFile({
-        path: 'example.txt',
-        operation: 'read'
-      });
-    })
-    .then(result => {
-      console.log('File processed:', result);
-    })
-    .catch(error => {
-      console.error('Akitaki error:', error);
-    });
-});
-
-// Fallback if Akitaki isn't installed
-setTimeout(() => {
-  if (!window.Akitaki) {
-    console.log('Akitaki extension not detected');
-    // Show alternative UI or prompt to install
-  }
-}, 1000);
-```
-
-### API Reference
-
-The Akitaki JavaScript API provides the following methods:
-
-- `Akitaki.connect(permissions)`: Connect to the extension and request permissions
-- `Akitaki.requestFolder()`: Request access to the user-selected folder
-- `Akitaki.processFile(options)`: Process a file with the specified options
+### Viewing File Contents
+When you click on a file, its contents will be displayed in the file content area below the file list.
 
 ## Troubleshooting
 
-### Common Issues
+### Extension Not Detected
+If the application shows "Akitaki extension not detected":
+1. Make sure you've installed the Akitaki extension
+2. Try refreshing the page
+3. Check if the extension is enabled in your browser
 
-1. **"Extension not responding"**
-   - Check if the extension is properly installed and enabled
-   - Try restarting Chrome
+### Permission Errors
+If you see permission errors:
+1. Make sure you've granted the necessary permissions
+2. Try disconnecting and reconnecting to Akitaki
+3. Restart your browser if problems persist
 
-2. **"Unable to start local server"**
-   - Ensure the local server component is properly installed
-   - Check if another process is using the same port
-   - Try restarting your computer
+### Folder Selection Issues
+If folder selection doesn't work:
+1. Try selecting a different folder
+2. Ensure you have read permissions for the selected folder
+3. Reconnect to Akitaki and try again
 
-3. **"Permission denied" when selecting a folder**
-   - Make sure you have read/write permissions for the folder
-   - Try selecting a different folder
-
-4. **Website cannot connect to Akitaki**
-   - Ensure the website is using the correct API
-   - Check if you've authorized the website in the extension popup
-
-## Security Considerations
-
-- Akitaki never sends your files to external servers - all processing happens locally
-- Only websites you explicitly authorize can access your selected folder
-- The connection between websites and your local server is secured with a unique token
-- You can revoke access at any time
-- File access is restricted to the folder you select
-
-## Privacy Policy
-
-Your privacy is important to us. Akitaki:
-
-- Does not collect any personal information
-- Does not track your browsing activity
-- Does not share any data with third parties
-- All data access is transparent and under your control
-
-## Get Help
-
-If you have questions or need assistance:
-
-- Visit our support website: [support.akitaki.com](https://support.akitaki.com)
-- Email us at: [support@akitaki.com](mailto:support@akitaki.com)
-- Check our documentation: [docs.akitaki.com](https://docs.akitaki.com)
+## Security Information
+- Akitaki only gives websites access to files and folders that you explicitly select
+- The website can only access the selected folder and its contents
+- No file system access is allowed without your permission
