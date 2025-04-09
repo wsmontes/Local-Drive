@@ -230,23 +230,100 @@ document.addEventListener('DOMContentLoaded', () => {
         fileList.innerHTML = '';
         fileContent.style.display = 'none';
         
-        window.Akitaki.processFile({
-            path: folderPath,
-            operation: 'listContents'
-        })
-        .then(contents => {
-            log(`Folder contents received: ${contents ? contents.length : 0} items`);
+        // Try different API methods for listing directory contents
+        if (typeof window.Akitaki.listDirectory === 'function') {
+            log('Using listDirectory API method');
             
+            window.Akitaki.listDirectory(folderPath)
+                .then(contents => handleContents(contents))
+                .catch(handleListingError);
+        }
+        else if (typeof window.Akitaki.readDirectory === 'function') {
+            log('Using readDirectory API method');
+            
+            window.Akitaki.readDirectory(folderPath)
+                .then(contents => handleContents(contents))
+                .catch(handleListingError);
+        }
+        else {
+            log('Using processFile API method with listContents operation');
+            
+            // Try different operation names that the API might support
+            const tryNextOperation = (operations, index = 0) => {
+                if (index >= operations.length) {
+                    showError(`Could not list folder contents. None of the known API operations are supported.`);
+                    return;
+                }
+                
+                const operation = operations[index];
+                log(`Trying operation: ${operation}`);
+                
+                window.Akitaki.processFile({
+                    path: folderPath,
+                    operation: operation
+                })
+                .then(contents => {
+                    log(`Success with operation: ${operation}`);
+                    handleContents(contents);
+                })
+                .catch(error => {
+                    log(`Failed with operation: ${operation}, error: ${error.message}`);
+                    // Try the next operation
+                    tryNextOperation(operations, index + 1);
+                });
+            };
+            
+            // Try these operations in order
+            tryNextOperation(['listContents', 'list', 'readDir', 'getFiles', 'getDirectoryContents']);
+        }
+        
+        function handleContents(contents) {
+            log(`Folder contents received: ${contents ? (Array.isArray(contents) ? contents.length : 'not an array') : 'null'}`);
+            
+            // Handle different response formats
             if (Array.isArray(contents)) {
                 displayFolderContents(contents);
+            } 
+            else if (contents && typeof contents === 'object') {
+                // Some APIs might return objects with files/folders properties
+                const files = [];
+                
+                // Try to extract files from different possible structures
+                if (Array.isArray(contents.files)) {
+                    contents.files.forEach(file => {
+                        files.push({
+                            name: typeof file === 'string' ? file : file.name,
+                            isDirectory: false,
+                            ...file
+                        });
+                    });
+                }
+                
+                if (Array.isArray(contents.folders)) {
+                    contents.folders.forEach(folder => {
+                        files.push({
+                            name: typeof folder === 'string' ? folder : folder.name,
+                            isDirectory: true,
+                            ...folder
+                        });
+                    });
+                }
+                
+                // If we extracted files, display them
+                if (files.length > 0) {
+                    displayFolderContents(files);
+                } else {
+                    showError('Invalid folder contents format returned');
+                }
             } else {
                 showError('Invalid folder contents returned');
             }
-        })
-        .catch(error => {
+        }
+        
+        function handleListingError(error) {
             log(`Error loading folder contents: ${error.message}`, true);
             showError(`Error loading folder contents: ${error.message}`);
-        });
+        }
     }
 
     // Display folder contents in the file list
@@ -300,20 +377,80 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load and display file content
     function loadFileContent(filePath) {
         log(`Loading file content: ${filePath}`);
+        fileContent.style.display = 'none';
         
-        window.Akitaki.processFile({
-            path: filePath,
-            operation: 'read'
-        })
-        .then(content => {
+        // Try different API methods for reading file content
+        if (typeof window.Akitaki.readFile === 'function') {
+            log('Using readFile API method');
+            
+            window.Akitaki.readFile(filePath)
+                .then(handleFileContent)
+                .catch(handleFileError);
+        } 
+        else {
+            log('Using processFile API method');
+            
+            // Try different operation names that the API might support
+            const tryNextOperation = (operations, index = 0) => {
+                if (index >= operations.length) {
+                    showError(`Could not read file. None of the known API operations are supported.`);
+                    return;
+                }
+                
+                const operation = operations[index];
+                log(`Trying file read operation: ${operation}`);
+                
+                window.Akitaki.processFile({
+                    path: filePath,
+                    operation: operation
+                })
+                .then(content => {
+                    log(`Success with operation: ${operation}`);
+                    handleFileContent(content);
+                })
+                .catch(error => {
+                    log(`Failed with operation: ${operation}, error: ${error.message}`);
+                    // Try the next operation
+                    tryNextOperation(operations, index + 1);
+                });
+            };
+            
+            // Try these operations in order
+            tryNextOperation(['read', 'readFile', 'getFileContents', 'getContent']);
+        }
+        
+        function handleFileContent(content) {
             log('File content loaded successfully');
-            fileContent.textContent = content;
+            
+            // Handle different response formats
+            if (typeof content === 'string') {
+                fileContent.textContent = content;
+            } 
+            else if (content && content.content && typeof content.content === 'string') {
+                fileContent.textContent = content.content;
+            } 
+            else if (content && content.data && typeof content.data === 'string') {
+                fileContent.textContent = content.data;
+            } 
+            else if (content && typeof content === 'object') {
+                // If it's JSON, stringify it for display
+                try {
+                    fileContent.textContent = JSON.stringify(content, null, 2);
+                } catch (e) {
+                    fileContent.textContent = 'Unable to display content: ' + e.message;
+                }
+            } 
+            else {
+                fileContent.textContent = 'File content could not be displayed in text format.';
+            }
+            
             fileContent.style.display = 'block';
-        })
-        .catch(error => {
+        }
+        
+        function handleFileError(error) {
             log(`Error reading file: ${error.message}`, true);
             showError(`Error reading file: ${error.message}`);
-        });
+        }
     }
 
     // Update breadcrumb navigation
