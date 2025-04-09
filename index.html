@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akitaki File Navigator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .status-bar {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .status-bar.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-bar.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .file-browser {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+        .breadcrumb {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .breadcrumb span {
+            cursor: pointer;
+            color: #0066cc;
+        }
+        .breadcrumb span:hover {
+            text-decoration: underline;
+        }
+        .file-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .file-list li {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .file-list li:hover {
+            background-color: #f5f5f5;
+        }
+        .file-list li:last-child {
+            border-bottom: none;
+        }
+        .file-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .folder-icon::before {
+            content: "📁";
+        }
+        .file-icon::before {
+            content: "📄";
+        }
+        .file-content {
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            white-space: pre-wrap;
+            display: none;
+            background-color: #f8f8f8;
+            max-height: 400px;
+            overflow: auto;
+        }
+        .installation-guide {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f5fe;
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Akitaki File Navigator</h1>
+        
+        <div id="statusBar" class="status-bar">
+            Checking for Akitaki extension...
+        </div>
+        
+        <div id="controls">
+            <button id="connectBtn" disabled>Connect to Akitaki</button>
+            <button id="selectFolderBtn" disabled>Select Folder</button>
+            <button id="goBackBtn" disabled>Back</button>
+        </div>
+        
+        <div id="fileBrowser" class="file-browser">
+            <div id="breadcrumb" class="breadcrumb">
+                Home
+            </div>
+            <ul id="fileList" class="file-list"></ul>
+            <div id="fileContent" class="file-content"></div>
+        </div>
+        
+        <div id="installationGuide" class="installation-guide">
+            <h3>Akitaki Extension Not Detected</h3>
+            <p>To use this file navigator, you need to install the Akitaki extension. Follow these steps:</p>
+            <ol>
+                <li>Download the Akitaki extension from the Chrome Web Store</li>
+                <li>Install the local server component following the instructions in the usage guide</li>
+                <li>Reload this page after installation</li>
+            </ol>
+            <p><a href="usage-guide.md" target="_blank">View the full usage guide</a></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
