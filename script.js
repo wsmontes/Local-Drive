@@ -230,21 +230,12 @@ document.addEventListener('DOMContentLoaded', () => {
         fileList.innerHTML = '';
         fileContent.style.display = 'none';
         
-        // Use the correct operation supported by Akitaki
-        if (typeof window.Akitaki.processFile === 'function') {
-            log('Using processFile API method with listFolder operation');
-            
-            window.Akitaki.processFile({
-                path: folderPath,
-                operation: 'listFolder'
-            })
-            .then(contents => handleContents(contents))
-            .catch(handleListingError);
-        } else {
-            showError('Akitaki API does not support folder listing.');
-        }
-        
-        function handleContents(contents) {
+        // Use the 'listFolder' operation which is explicitly mentioned in the error as supported
+        window.Akitaki.processFile({
+            path: folderPath,
+            operation: 'listFolder'
+        })
+        .then(contents => {
             log(`Folder contents received: ${contents ? (Array.isArray(contents) ? contents.length : 'not an array') : 'null'}`);
             
             if (Array.isArray(contents)) {
@@ -252,12 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 showError('Invalid folder contents returned');
             }
-        }
-        
-        function handleListingError(error) {
+        })
+        .catch(error => {
             log(`Error loading folder contents: ${error.message}`, true);
             showError(`Error loading folder contents: ${error.message}`);
-        }
+        });
     }
 
     // Display folder contents in the file list
@@ -313,47 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
         log(`Loading file content: ${filePath}`);
         fileContent.style.display = 'none';
         
-        // Try different API methods for reading file content
-        if (typeof window.Akitaki.readFile === 'function') {
-            log('Using readFile API method');
-            
-            window.Akitaki.readFile(filePath)
-                .then(handleFileContent)
-                .catch(handleFileError);
-        } 
-        else {
-            log('Using processFile API method');
-            
-            // Try different operation names that the API might support
-            const tryNextOperation = (operations, index = 0) => {
-                if (index >= operations.length) {
-                    showError(`Could not read file. None of the known API operations are supported.`);
-                    return;
-                }
-                
-                const operation = operations[index];
-                log(`Trying file read operation: ${operation}`);
-                
-                window.Akitaki.processFile({
-                    path: filePath,
-                    operation: operation
-                })
-                .then(content => {
-                    log(`Success with operation: ${operation}`);
-                    handleFileContent(content);
-                })
-                .catch(error => {
-                    log(`Failed with operation: ${operation}, error: ${error.message}`);
-                    // Try the next operation
-                    tryNextOperation(operations, index + 1);
-                });
-            };
-            
-            // Try these operations in order
-            tryNextOperation(['read', 'readFile', 'getFileContents', 'getContent']);
-        }
-        
-        function handleFileContent(content) {
+        // Use the 'readFile' operation which is explicitly mentioned in the error as supported
+        window.Akitaki.processFile({
+            path: filePath,
+            operation: 'readFile'
+        })
+        .then(content => {
             log('File content loaded successfully');
             
             // Handle different response formats
@@ -379,12 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             fileContent.style.display = 'block';
-        }
-        
-        function handleFileError(error) {
+        })
+        .catch(error => {
             log(`Error reading file: ${error.message}`, true);
             showError(`Error reading file: ${error.message}`);
-        }
+        });
     }
 
     // Update breadcrumb navigation
